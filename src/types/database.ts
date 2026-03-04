@@ -9,8 +9,10 @@ export type Profile = {
   city: string | null
   state: string | null
   logo_url: string | null
+  brand_color: string | null
   plan: 'free' | 'pro'
-  mp_subscription_id: string | null
+  pro_until: string | null
+  abacatepay_billing_id: string | null
   budgets_this_month: number
   created_at: string
   updated_at: string

@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getClients } from '@/lib/services/clients'
 import { getServices } from '@/lib/services/services'
 import { redirect } from 'next/navigation'
-import { NovoOrcamentoClient } from './novo-orcamento-client'
+import { OrcamentoForm } from '../orcamento-form'
 
 export default async function NovoOrcamentoPage() {
   const supabase = await createClient()
@@ -15,7 +15,7 @@ export default async function NovoOrcamentoPage() {
   ])
 
   return (
-    <NovoOrcamentoClient
+    <OrcamentoForm
       clients={clientsResult.data}
       services={servicesResult.data}
     />

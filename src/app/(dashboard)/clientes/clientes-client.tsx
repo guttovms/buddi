@@ -1,12 +1,12 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { MaskedInput } from '@/components/ui/masked-input'
 import { Modal } from '@/components/ui/modal'
-import { formatPhone } from '@/lib/utils'
+import { formatPhone, maskPhone, maskCpfCnpj } from '@/lib/utils'
 import { Client } from '@/types/database'
-import { Pencil, Phone, Plus, Trash2, Users } from 'lucide-react'
+import { Pencil, Plus, Search, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
 import { createClientAction, deleteClientAction, updateClientAction } from './actions'
 
@@ -14,6 +14,13 @@ export function ClientesClient({ clients }: { clients: Client[] }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Client | null>(null)
   const [loading, setLoading] = useState(false)
+  const [search, setSearch] = useState('')
+
+  const filtered = clients.filter((c) =>
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    c.email?.toLowerCase().includes(search.toLowerCase()) ||
+    c.phone?.includes(search)
+  )
 
   function openCreate() {
     setEditing(null)
@@ -47,8 +54,13 @@ export function ClientesClient({ clients }: { clients: Client[] }) {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
+      <div className="mb-2 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
+          <p className="text-sm text-gray-500">
+            {clients.length} {clients.length === 1 ? 'cliente cadastrado' : 'clientes cadastrados'}
+          </p>
+        </div>
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Cliente
@@ -68,43 +80,67 @@ export function ClientesClient({ clients }: { clients: Client[] }) {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {clients.map((client) => (
-            <Card key={client.id} className="flex items-start justify-between">
-              <div>
-                <h3 className="font-medium text-gray-900">{client.name}</h3>
-                {client.phone && (
-                  <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
-                    <Phone className="h-3 w-3" />
-                    {formatPhone(client.phone)}
-                  </p>
-                )}
-                {client.email && (
-                  <p className="mt-0.5 text-sm text-gray-500">{client.email}</p>
-                )}
-                {client.city && client.state && (
-                  <p className="mt-0.5 text-sm text-gray-400">
-                    {client.city} - {client.state}
-                  </p>
-                )}
+        <>
+          <div className="relative mb-4 mt-4">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar clientes..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="space-y-2">
+            {filtered.map((client) => (
+              <div
+                key={client.id}
+                className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{client.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {[client.email, client.city && client.state ? `${client.city}/${client.state}` : null]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {client.phone && (
+                    <span className="hidden text-sm text-gray-500 sm:block">
+                      {formatPhone(client.phone)}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => openEdit(client)}
+                    className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    title="Editar"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(client.id)}
+                    className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    title="Excluir"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => openEdit(client)}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(client.id)}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </Card>
-          ))}
-        </div>
+            ))}
+            {filtered.length === 0 && search && (
+              <p className="py-8 text-center text-sm text-gray-500">
+                Nenhum cliente encontrado para &quot;{search}&quot;
+              </p>
+            )}
+          </div>
+        </>
       )}
 
       <Modal
@@ -116,33 +152,33 @@ export function ClientesClient({ clients }: { clients: Client[] }) {
           <Input
             id="name"
             name="name"
-            label="Nome completo"
-            placeholder="Ex: João da Silva"
+            label="Nome *"
+            placeholder="Nome do cliente"
             defaultValue={editing?.name}
             required
           />
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              id="phone"
-              name="phone"
-              label="Telefone"
-              placeholder="(00) 00000-0000"
-              defaultValue={editing?.phone || ''}
-            />
-            <Input
-              id="email"
-              name="email"
-              label="Email"
-              type="email"
-              placeholder="email@exemplo.com"
-              defaultValue={editing?.email || ''}
-            />
-          </div>
           <Input
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            placeholder="email@exemplo.com"
+            defaultValue={editing?.email || ''}
+          />
+          <MaskedInput
+            id="phone"
+            name="phone"
+            label="Telefone"
+            placeholder="(00) 00000-0000"
+            mask={maskPhone}
+            defaultValue={editing?.phone || ''}
+          />
+          <MaskedInput
             id="document"
             name="document"
             label="CPF/CNPJ"
             placeholder="000.000.000-00"
+            mask={maskCpfCnpj}
             defaultValue={editing?.document || ''}
           />
           <Input

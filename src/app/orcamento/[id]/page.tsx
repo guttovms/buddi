@@ -6,9 +6,10 @@ import { Card } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { getPublicBudget } from '@/lib/services/budgets'
 import { formatCurrency, formatDate, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils'
-import { CheckCircle, Download, FileText } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { ApproveButton } from './approve-button'
+import { PrintButton } from './print-button'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -30,14 +31,25 @@ export default async function OrcamentoPublicoPage({ params }: Props) {
   }
 
   const profile = budget.profile
+  const brandColor = profile?.brand_color || '#2563eb'
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-2xl">
         {/* Header */}
-        <Card className="mb-6">
-          <div className="flex items-start justify-between">
+        <Card className="mb-6 overflow-hidden p-0">
+          <div className="h-1.5" style={{ backgroundColor: brandColor }} />
+          <div className="flex items-start justify-between p-6">
             <div>
+              {profile?.logo_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profile.logo_url}
+                  alt="Logo"
+                  style={{ maxHeight: '40px', maxWidth: '140px' }}
+                  className="mb-2 object-contain"
+                />
+              )}
               <h1 className="text-2xl font-bold text-gray-900">
                 {profile?.business_name || 'Orçamento'}
               </h1>
@@ -106,7 +118,7 @@ export default async function OrcamentoPublicoPage({ params }: Props) {
                   <td colSpan={3} className="pt-4 text-right text-lg font-bold text-gray-900">
                     Total:
                   </td>
-                  <td className="pt-4 text-right text-lg font-bold text-blue-600">
+                  <td className="pt-4 text-right text-lg font-bold" style={{ color: brandColor }}>
                     {formatCurrency(budget.total)}
                   </td>
                 </tr>
@@ -137,7 +149,8 @@ export default async function OrcamentoPublicoPage({ params }: Props) {
         )}
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 print:hidden">
+          <PrintButton />
           {budget.status === 'enviado' && (
             <ApproveButton budgetId={budget.id} />
           )}
@@ -147,6 +160,11 @@ export default async function OrcamentoPublicoPage({ params }: Props) {
               <span className="font-medium">Orçamento aprovado!</span>
             </div>
           )}
+        </div>
+
+        {/* Print footer */}
+        <div className="mt-8 hidden text-center text-xs text-gray-400 print:block">
+          Gerado por Buddi
         </div>
       </div>
     </div>

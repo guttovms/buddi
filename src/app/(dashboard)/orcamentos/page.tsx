@@ -4,10 +4,10 @@ import { Card } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { getBudgets } from '@/lib/services/budgets'
 import { formatCurrency, formatDate, STATUS_COLORS, STATUS_LABELS } from '@/lib/utils'
-import { ExternalLink, FileText, Plus, Trash2 } from 'lucide-react'
+import { Copy, ExternalLink, FileText, Pencil, Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { deleteBudgetAction, updateBudgetStatusAction } from './actions'
+import { deleteBudgetAction, duplicateBudgetAction, updateBudgetStatusAction } from './actions'
 
 export default async function OrcamentosPage() {
   const supabase = await createClient()
@@ -61,7 +61,7 @@ export default async function OrcamentosPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 {budget.status === 'rascunho' && (
                   <form action={updateBudgetStatusAction.bind(null, budget.id, 'enviado')}>
                     <Button variant="outline" size="sm" type="submit">
@@ -70,9 +70,26 @@ export default async function OrcamentosPage() {
                   </form>
                 )}
                 <Link
+                  href={`/orcamentos/${budget.id}/editar`}
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  title="Editar"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Link>
+                <form action={duplicateBudgetAction.bind(null, budget.id)}>
+                  <button
+                    type="submit"
+                    className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    title="Duplicar"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                </form>
+                <Link
                   href={`/orcamento/${budget.id}`}
                   target="_blank"
                   className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  title="Ver link público"
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Link>
@@ -80,6 +97,7 @@ export default async function OrcamentosPage() {
                   <button
                     type="submit"
                     className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    title="Excluir"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

@@ -1,3 +1,4 @@
+import { Logo } from '@/components/logo'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Check, FileText, Share2, Smartphone, Zap } from 'lucide-react'
@@ -9,7 +10,7 @@ export default function LandingPage() {
       {/* Navbar */}
       <nav className="border-b border-gray-100">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <span className="text-xl font-bold text-blue-600">OrçaRápido</span>
+          <Logo size="sm" />
           <div className="flex items-center gap-3">
             <Link href="/login">
               <Button variant="ghost" size="sm">Entrar</Button>
@@ -164,7 +165,7 @@ export default function LandingPage() {
             Pronto para criar orçamentos profissionais?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-blue-100">
-            Junte-se a centenas de profissionais que já usam o OrçaRápido.
+            Junte-se a centenas de profissionais que já usam o Buddi.
           </p>
           <Link href="/signup">
             <Button size="lg" className="mt-8 bg-white text-blue-600 hover:bg-blue-50">
@@ -177,7 +178,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
         <div className="mx-auto max-w-6xl px-6 text-center text-sm text-gray-400">
-          &copy; {new Date().getFullYear()} OrçaRápido. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} Buddi. Todos os direitos reservados.
         </div>
       </footer>
     </div>

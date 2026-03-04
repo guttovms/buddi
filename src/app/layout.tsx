@@ -8,7 +8,7 @@ const geist = Geist({
 })
 
 export const metadata: Metadata = {
-  title: 'OrçaRápido — Orçamentos Profissionais em Minutos',
+  title: 'Buddi — Orçamentos Profissionais em Minutos',
   description:
     'Crie orçamentos profissionais em PDF direto do celular. Envie por WhatsApp e feche mais negócios.',
 }

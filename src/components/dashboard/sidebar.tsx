@@ -1,5 +1,6 @@
 'use client'
 
+import { Logo } from '@/components/logo'
 import { cn } from '@/lib/utils'
 import {
   FileText,
@@ -52,8 +53,8 @@ export function Sidebar() {
         )}
       >
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
-          <Link href="/dashboard" className="text-xl font-bold text-blue-600">
-            OrçaRápido
+          <Link href="/dashboard">
+            <Logo size="sm" />
           </Link>
           <button
             onClick={() => setMobileOpen(false)}

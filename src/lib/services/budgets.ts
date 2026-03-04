@@ -65,6 +65,51 @@ export async function createBudget(
   return { data: budgetData as Budget, error: null }
 }
 
+export async function updateBudget(
+  supabase: SupabaseClient,
+  id: string,
+  budget: {
+    client_id: string
+    payment_conditions?: string
+    validity_days?: number
+    notes?: string
+    total: number
+  },
+  items: Omit<BudgetItem, 'id' | 'budget_id'>[]
+) {
+  const { data: budgetData, error: budgetError } = await supabase
+    .from('budgets')
+    .update({
+      ...budget,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (budgetError || !budgetData) return { data: null, error: budgetError }
+
+  const { error: deleteError } = await supabase
+    .from('budget_items')
+    .delete()
+    .eq('budget_id', id)
+
+  if (deleteError) return { data: null, error: deleteError }
+
+  const budgetItems = items.map((item) => ({
+    ...item,
+    budget_id: id,
+  }))
+
+  const { error: itemsError } = await supabase
+    .from('budget_items')
+    .insert(budgetItems)
+
+  if (itemsError) return { data: null, error: itemsError }
+
+  return { data: budgetData as Budget, error: null }
+}
+
 export async function updateBudgetStatus(
   supabase: SupabaseClient,
   id: string,

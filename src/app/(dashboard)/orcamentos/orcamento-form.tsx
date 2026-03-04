@@ -6,11 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { formatCurrency, UNIT_OPTIONS } from '@/lib/utils'
-import { Client, Service } from '@/types/database'
+import { BudgetWithItems, Client, Service } from '@/types/database'
 import { Plus, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { createBudgetAction } from '../actions'
+import { createBudgetAction, updateBudgetAction } from './actions'
 
 interface BudgetItemForm {
   service_name: string
@@ -25,19 +25,33 @@ interface BudgetItemForm {
 interface Props {
   clients: Client[]
   services: Service[]
+  budget?: BudgetWithItems
 }
 
-export function NovoOrcamentoClient({ clients, services }: Props) {
+export function OrcamentoForm({ clients, services, budget }: Props) {
   const router = useRouter()
+  const isEditing = !!budget
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [clientId, setClientId] = useState('')
-  const [paymentConditions, setPaymentConditions] = useState('')
-  const [validityDays, setValidityDays] = useState(30)
-  const [notes, setNotes] = useState('')
-  const [items, setItems] = useState<BudgetItemForm[]>([
-    { service_name: '', description: '', unit: 'un', quantity: 1, unit_price: 0, total: 0, sort_order: 0 },
-  ])
+  const [clientId, setClientId] = useState(budget?.client_id || '')
+  const [paymentConditions, setPaymentConditions] = useState(budget?.payment_conditions || '')
+  const [validityDays, setValidityDays] = useState(budget?.validity_days || 30)
+  const [notes, setNotes] = useState(budget?.notes || '')
+  const [items, setItems] = useState<BudgetItemForm[]>(
+    budget?.items.length
+      ? budget.items
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((item) => ({
+            service_name: item.service_name,
+            description: item.description || '',
+            unit: item.unit,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total: item.total,
+            sort_order: item.sort_order,
+          }))
+      : [{ service_name: '', description: '', unit: 'un', quantity: 1, unit_price: 0, total: 0, sort_order: 0 }]
+  )
 
   function addItem() {
     setItems([
@@ -84,7 +98,7 @@ export function NovoOrcamentoClient({ clients, services }: Props) {
       description: service.description || '',
       unit: service.unit,
       unit_price: service.price,
-      total: Number(updated[index].quantity) * service.price,
+      total: (Number(updated[index].quantity) || 1) * service.price,
     }
     setItems(updated)
   }
@@ -105,34 +119,46 @@ export function NovoOrcamentoClient({ clients, services }: Props) {
     setLoading(true)
     setError('')
 
-    const normalizedItems = items.map((i) => ({
+    const normalizedItems = items.map((i, idx) => ({
       ...i,
       quantity: Number(i.quantity) || 0,
       unit_price: Number(i.unit_price) || 0,
       total: (Number(i.quantity) || 0) * (Number(i.unit_price) || 0),
+      sort_order: idx,
     }))
 
     try {
-      await createBudgetAction({
-        client_id: clientId,
-        payment_conditions: paymentConditions,
-        validity_days: validityDays,
-        notes,
-        items: normalizedItems,
-      })
+      if (isEditing) {
+        await updateBudgetAction(budget.id, {
+          client_id: clientId,
+          payment_conditions: paymentConditions,
+          validity_days: validityDays,
+          notes,
+          items: normalizedItems,
+        })
+      } else {
+        await createBudgetAction({
+          client_id: clientId,
+          payment_conditions: paymentConditions,
+          validity_days: validityDays,
+          notes,
+          items: normalizedItems,
+        })
+      }
       router.push('/orcamentos')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar orçamento.')
+      setError(err instanceof Error ? err.message : 'Erro ao salvar orçamento.')
       setLoading(false)
     }
   }
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Novo Orçamento</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">
+        {isEditing ? `Editar Orçamento #${budget.number}` : 'Novo Orçamento'}
+      </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Client selection */}
         <Card>
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Cliente</h2>
           <Select
@@ -147,7 +173,6 @@ export function NovoOrcamentoClient({ clients, services }: Props) {
           />
         </Card>
 
-        {/* Items */}
         <Card>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Itens</h2>
@@ -251,7 +276,6 @@ export function NovoOrcamentoClient({ clients, services }: Props) {
           </div>
         </Card>
 
-        {/* Conditions */}
         <Card>
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Condições</h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -292,7 +316,7 @@ export function NovoOrcamentoClient({ clients, services }: Props) {
             Cancelar
           </Button>
           <Button type="submit" loading={loading}>
-            Criar Orçamento
+            {isEditing ? 'Salvar Alterações' : 'Criar Orçamento'}
           </Button>
         </div>
       </form>

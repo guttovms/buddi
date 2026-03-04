@@ -23,3 +23,29 @@ export async function updateProfileAction(formData: FormData) {
   if (error) throw new Error(error.message)
   revalidatePath('/configuracoes')
 }
+
+export async function updateLogoAction(logoUrl: string | null) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Não autenticado')
+
+  const { error } = await updateProfile(supabase, user.id, {
+    logo_url: logoUrl,
+  })
+
+  if (error) throw new Error(error.message)
+  revalidatePath('/configuracoes')
+}
+
+export async function updateBrandColorAction(brandColor: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Não autenticado')
+
+  const { error } = await updateProfile(supabase, user.id, {
+    brand_color: brandColor,
+  })
+
+  if (error) throw new Error(error.message)
+  revalidatePath('/configuracoes')
+}
